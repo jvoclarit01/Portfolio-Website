@@ -12,7 +12,9 @@
       "Bash(powershell *)",
       "Bash(node screenshot.mjs http://localhost:3000)",
       "Bash(Get-ChildItem -Path \"D:\\\\Portfolio Website\" -Exclude node_modules,.git)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(npm run *)",
+      "Bash(curl *)"
     ]
   },
   "enabledPlugins": {
