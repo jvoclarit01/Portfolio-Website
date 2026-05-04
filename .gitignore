@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temporary screenshots/

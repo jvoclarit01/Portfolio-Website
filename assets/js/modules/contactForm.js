@@ -7,7 +7,7 @@ const contactForm = document.getElementById('contactForm');
 const formMessage = document.getElementById('formMessage');
 
 if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const name = document.getElementById('name').value;
@@ -29,10 +29,38 @@ if (contactForm) {
             return;
         }
 
-        // Simulate form submission (replace with actual form submission logic)
-        formMessage.className = 'form-message success';
-        formMessage.textContent = 'Message sent successfully! I\'ll get back to you soon.';
-        contactForm.reset();
+        // Submit to backend API
+        const submitButton = contactForm.querySelector('.form-submit');
+        const originalButtonText = submitButton.textContent;
+        submitButton.textContent = 'Sending...';
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch('http://localhost:3001/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, email, message }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                formMessage.className = 'form-message success';
+                formMessage.textContent = data.message || 'Message sent successfully! I\'ll get back to you soon.';
+                contactForm.reset();
+            } else {
+                formMessage.className = 'form-message error';
+                formMessage.textContent = data.message || 'Failed to send message. Please try again.';
+            }
+        } catch (error) {
+            formMessage.className = 'form-message error';
+            formMessage.textContent = 'Failed to send message. Please check your connection and try again.';
+        } finally {
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
+        }
 
         // Clear message after 5 seconds
         setTimeout(() => {

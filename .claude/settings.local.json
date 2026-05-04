@@ -10,7 +10,12 @@
       "Bash(node serve.mjs)",
       "Bash(timeout *)",
       "Bash(powershell *)",
-      "Bash(node screenshot.mjs http://localhost:3000)"
+      "Bash(node screenshot.mjs http://localhost:3000)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Portfolio Website\" -Exclude node_modules,.git)",
+      "Bash(Select-Object Name)"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
   }
 }
