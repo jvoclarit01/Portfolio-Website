@@ -75,7 +75,7 @@ body {
 }
 
 /* Hide default cursor on interactive elements */
-a, button, .btn, input, textarea, select, .skill-card, .project-card, .form-input, .form-textarea, .form-submit {
+a, button, .btn, input, textarea, select, .skill-card, .project-card, .form-input, .form-textarea, .form-submit, .form-label {
     cursor: none !important;
 }
 
