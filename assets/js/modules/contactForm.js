@@ -36,7 +36,8 @@ if (contactForm) {
         submitButton.disabled = true;
 
         try {
-            const response = await fetch('http://localhost:3001/api/contact', {
+            const API_URL = window.API_URL || 'http://localhost:3001';
+            const response = await fetch(`${API_URL}/api/contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
