@@ -14,7 +14,9 @@
       "Bash(Get-ChildItem -Path \"D:\\\\Portfolio Website\" -Exclude node_modules,.git)",
       "Bash(Select-Object Name)",
       "Bash(npm run *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3001)"
     ]
   },
   "enabledPlugins": {
