@@ -2,17 +2,66 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import db from './database.js';
+import database from './database.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Simple in-memory rate limiter
+const rateLimit = new Map();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 10; // 10 requests per window
+
+function rateLimitMiddleware(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+
+  if (!rateLimit.has(ip)) {
+    rateLimit.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return next();
+  }
+
+  const data = rateLimit.get(ip);
+
+  if (now > data.resetAt) {
+    rateLimit.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return next();
+  }
+
+  if (data.count >= RATE_LIMIT_MAX) {
+    return res.status(429).json({
+      success: false,
+      message: 'Too many requests. Please try again later.',
+    });
+  }
+
+  data.count++;
+  next();
+}
+
+// Simple API key authentication for admin endpoints
+function authMiddleware(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized',
+    });
+  }
+
+  next();
+}
+
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' })); // Limit body size
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Serve static files from project root
+app.use(express.static('.'));
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -28,14 +77,14 @@ const transporter = nodemailer.createTransport({
 // Verify email configuration on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.error('Email configuration error:', error);
+    console.error('Email configuration error:', error.message);
   } else {
     console.log('Email server is ready to send messages');
   }
 });
 
 // Contact form endpoint
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', rateLimitMiddleware, async (req, res) => {
   try {
     const { name, email, message } = req.body;
 
@@ -56,26 +105,30 @@ app.post('/api/contact', async (req, res) => {
       });
     }
 
+    // Sanitize inputs (basic XSS prevention)
+    const sanitizedName = name.replace(/[<>]/g, '');
+    const sanitizedMessage = message.replace(/[<>]/g, '');
+
     // Prepare email
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: process.env.EMAIL_TO || process.env.SMTP_USER,
-      subject: `Portfolio Contact: ${name}`,
+      subject: `Portfolio Contact: ${sanitizedName}`,
       text: `
-Name: ${name}
+Name: ${sanitizedName}
 Email: ${email}
 
 Message:
-${message}
+${sanitizedMessage}
       `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #00f0ff;">New Contact Form Submission</h2>
-          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Name:</strong> ${sanitizedName}</p>
           <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p><strong>Message:</strong></p>
-          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${message.replace(/\n/g, '<br>')}</p>
+          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${sanitizedMessage.replace(/\n/g, '<br>')}</p>
         </div>
       `,
     };
@@ -84,19 +137,19 @@ ${message}
     await transporter.sendMail(mailOptions);
 
     // Store in database
-    const stmt = db.prepare(`
+    const db = await database.getDb();
+    db.run(`
       INSERT INTO submissions (name, email, message, status)
       VALUES (?, ?, ?, 'new')
-    `);
-    const result = stmt.run(name, email, message);
+    `, [sanitizedName, email, sanitizedMessage]);
+    database.save();
 
     res.json({
       success: true,
       message: 'Message sent successfully!',
-      id: result.lastInsertRowid,
     });
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error processing contact form:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to send message. Please try again.',
@@ -109,8 +162,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Get all submissions (admin endpoint)
-app.get('/api/submissions', (req, res) => {
+// Get all submissions (admin endpoint) - requires auth
+app.get('/api/submissions', authMiddleware, async (req, res) => {
   try {
     const { status } = req.query;
     let query = 'SELECT * FROM submissions';
@@ -123,18 +176,19 @@ app.get('/api/submissions', (req, res) => {
 
     query += ' ORDER BY created_at DESC';
 
+    const db = await database.getDb();
     const stmt = db.prepare(query);
-    const submissions = stmt.all(...params);
+    const submissions = stmt.getAsObject(...params);
 
     res.json({ success: true, data: submissions });
   } catch (error) {
-    console.error('Error fetching submissions:', error);
+    console.error('Error fetching submissions:', error.message);
     res.status(500).json({ success: false, message: 'Failed to fetch submissions' });
   }
 });
 
-// Update submission status
-app.patch('/api/submissions/:id', (req, res) => {
+// Update submission status (admin endpoint) - requires auth
+app.patch('/api/submissions/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -143,39 +197,33 @@ app.patch('/api/submissions/:id', (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const stmt = db.prepare(`
+    const db = await database.getDb();
+    db.run(`
       UPDATE submissions
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `);
-    const result = stmt.run(status, id);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Submission not found' });
-    }
+    `, [status, id]);
+    database.save();
 
     res.json({ success: true, message: 'Status updated' });
   } catch (error) {
-    console.error('Error updating submission:', error);
+    console.error('Error updating submission:', error.message);
     res.status(500).json({ success: false, message: 'Failed to update submission' });
   }
 });
 
-// Delete submission
-app.delete('/api/submissions/:id', (req, res) => {
+// Delete submission (admin endpoint) - requires auth
+app.delete('/api/submissions/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const stmt = db.prepare('DELETE FROM submissions WHERE id = ?');
-    const result = stmt.run(id);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Submission not found' });
-    }
+    const db = await database.getDb();
+    db.run('DELETE FROM submissions WHERE id = ?', [id]);
+    database.save();
 
     res.json({ success: true, message: 'Submission deleted' });
   } catch (error) {
-    console.error('Error deleting submission:', error);
+    console.error('Error deleting submission:', error.message);
     res.status(500).json({ success: false, message: 'Failed to delete submission' });
   }
 });
