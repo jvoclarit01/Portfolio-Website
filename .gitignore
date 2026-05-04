@@ -22,6 +22,8 @@ Thumbs.db
 
 # Temporary files
 temporary screenshots/
+CLAUDE.md
+
 
 # IDE files
 .vscode/
@@ -54,3 +56,7 @@ coverage/
 
 # Claude Code
 .claude/
+
+# Ship-safe files
+.ship-safe/
+ship-safe-report.html
