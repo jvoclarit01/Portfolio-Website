@@ -4,7 +4,7 @@
 .env.*.local
 
 # Node modules
-node_modules/
+node_modules
 
 # Database
 *.sqlite
@@ -21,31 +21,31 @@ yarn-error.log*
 Thumbs.db
 
 # Temporary files
-temporary screenshots/
+temporary screenshots
 CLAUDE.md
-
+brand_assets
 
 # IDE files
-.vscode/
-.idea/
+.vscode
+.idea
 
 # Cache files
-.cache/
+.cache
 .eslintcache
 .stylelintcache
 .prettiercache
 
 # Build output
-dist/
-build/
+dist
+build
 
 # Test coverage
-coverage/
-.nyc_output/
+coverage
+.nyc_output
 
 # Deployment files
-.vercel/
-.netlify/
+.vercel
+.netlify
 
 # Editor files
 *.swp
@@ -55,8 +55,8 @@ coverage/
 *.tmp
 
 # Claude Code
-.claude/
+.claude
 
 # Ship-safe files
-.ship-safe/
+.ship-safe
 ship-safe-report.html

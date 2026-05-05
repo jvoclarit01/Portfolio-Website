@@ -16,7 +16,10 @@
       "Bash(npm run *)",
       "Bash(curl *)",
       "Bash(netstat -ano)",
-      "Bash(findstr :3001)"
+      "Bash(findstr :3001)",
+      "PowerShell(Stop-Process *)",
+      "Bash(node server.js)",
+      "Skill(seo-image-gen)"
     ]
   },
   "enabledPlugins": {
