@@ -60,7 +60,7 @@
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-        size: 6,
+        size: 7,
         vertexColors: true,
         transparent: true,
         opacity: 0.6,

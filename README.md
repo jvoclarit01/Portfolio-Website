@@ -105,6 +105,26 @@ The frontend will run on `http://localhost:3000`
 - `POST /api/contact` - Submit contact form
   - Body: `{ name, email, message }`
 
+## Admin Panel
+
+Access the admin panel at `http://localhost:3000/admin.html` to manage contact form submissions.
+
+### Features
+- View all form submissions
+- Filter by status (New, Read, Replied, Archived)
+- Update submission status
+- Delete submissions
+- Real-time statistics
+
+### Authentication
+The admin panel uses API key authentication. Set your `ADMIN_API_KEY` in `.env`:
+
+```env
+ADMIN_API_KEY=your-strong-random-api-key-here
+```
+
+The API key is stored in localStorage for persistent sessions.
+
 ### Admin Endpoints
 - `GET /api/submissions` - Get all submissions (optional `?status=new` filter)
 - `PATCH /api/submissions/:id` - Update submission status
@@ -163,30 +183,33 @@ This serves the project root at `http://localhost:3000` with proper MIME types a
 Portfolio Website/
 ├── assets/
 │   ├── css/
-│   │   └── main.css              # Main stylesheet
+│   │   ├── main.css              # Main stylesheet
+│   │   └── admin.css             # Admin panel styles
 │   └── js/
-│       ├── main.js              # Entry point
+│       ├── main.js               # Entry point
+│       ├── admin.js              # Admin panel functionality
 │       └── modules/
-│           ├── contactForm.js   # Form handling
-│           ├── cursor.js        # Custom cursor
-│           ├── dottedSurface.js # Three.js 3D background
-│           ├── navigation.js    # Navigation logic
-│           └── scrollReveal.js  # Scroll animations
+│           ├── contactForm.js    # Form handling
+│           ├── cursor.js         # Custom cursor
+│           ├── dottedSurface.js  # Three.js 3D background
+│           ├── navigation.js     # Navigation logic
+│           └── scrollReveal.js   # Scroll animations
 ├── brand_assets/
-│   └── profile_image.jpg        # Brand images
-├── .claude/                     # Claude Code configuration
-├── .env                         # Environment variables (gitignored)
-├── .env.example                 # Environment template
-├── .gitignore                   # Git ignore rules
-├── CLAUDE.md                    # Project instructions for Claude
-├── database.js                  # Database initialization
-├── database.sqlite              # SQLite database file
-├── index.html                   # Main HTML file
-├── package.json                 # Project dependencies
-├── README.md                    # This file
-├── screenshot.mjs               # Screenshot utility
-├── serve.mjs                    # Frontend dev server
-└── server.js                    # Express backend server
+│   └── profile_image.jpg         # Brand images
+├── .claude/                      # Claude Code configuration
+├── .env                          # Environment variables (gitignored)
+├── .env.example                  # Environment template
+├── .gitignore                    # Git ignore rules
+├── CLAUDE.md                     # Project instructions for Claude
+├── admin.html                    # Admin panel page
+├── database.js                   # Database initialization
+├── database.sqlite               # SQLite database file
+├── index.html                    # Main HTML file
+├── package.json                   # Project dependencies
+├── README.md                     # This file
+├── screenshot.mjs                # Screenshot utility
+├── serve.mjs                     # Frontend dev server
+└── server.js                     # Express backend server
 ```
 
 ## Troubleshooting

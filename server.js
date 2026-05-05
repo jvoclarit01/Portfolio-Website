@@ -45,6 +45,12 @@ function rateLimitMiddleware(req, res, next) {
 function authMiddleware(req, res, next) {
   const apiKey = req.headers['x-api-key'];
 
+  console.log('Auth check:', {
+    received: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+    expected: process.env.ADMIN_API_KEY ? process.env.ADMIN_API_KEY.substring(0, 10) + '...' : 'none',
+    match: apiKey === process.env.ADMIN_API_KEY
+  });
+
   if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
     return res.status(401).json({
       success: false,
@@ -177,10 +183,44 @@ app.get('/api/submissions', authMiddleware, async (req, res) => {
     query += ' ORDER BY created_at DESC';
 
     const db = await database.getDb();
-    const stmt = db.prepare(query);
-    const submissions = stmt.getAsObject(...params);
+    const submissionsResult = db.exec(query);
 
-    res.json({ success: true, data: submissions });
+    // Convert exec result to array of objects
+    const submissions = [];
+    if (submissionsResult.length > 0 && submissionsResult[0].values && submissionsResult[0].values.length > 0) {
+      const columns = submissionsResult[0].columns;
+      submissionsResult[0].values.forEach(row => {
+        const obj = {};
+        columns.forEach((col, i) => {
+          obj[col] = row[i];
+        });
+        submissions.push(obj);
+      });
+    }
+
+    // Calculate stats using db.exec() which always returns array format
+    const statsResult = db.exec('SELECT status, COUNT(*) as count FROM submissions GROUP BY status');
+    const stats = {
+      total: 0,
+      new: 0,
+      read: 0,
+      replied: 0,
+      archived: 0
+    };
+
+    // exec() returns { columns: [...], values: [[...]] }
+    if (statsResult.length > 0 && statsResult[0].values && statsResult[0].values.length > 0) {
+      statsResult[0].values.forEach(row => {
+        const status = row[0];
+        const count = row[1];
+        stats.total += count;
+        if (stats[status] !== undefined) {
+          stats[status] = count;
+        }
+      });
+    }
+
+    res.json({ success: true, submissions, stats });
   } catch (error) {
     console.error('Error fetching submissions:', error.message);
     res.status(500).json({ success: false, message: 'Failed to fetch submissions' });

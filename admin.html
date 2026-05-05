@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        window.API_URL = 'http://localhost:3001';
+    </script>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+    <div class="dotted-surface" id="dottedSurface"></div>
+    <div class="ambient-glow">
+        <div class="glow-orb glow-orb-1"></div>
+        <div class="glow-orb glow-orb-2"></div>
+    </div>
+    <div class="grid-overlay"></div>
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="28" height="28" rx="6" stroke="#00f0ff" stroke-width="2"/>
+                    <path d="M10 16L14 20L22 12" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h1>Admin Access</h1>
+                <p>Enter your API key to continue</p>
+            </div>
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" name="apiKey" class="form-input" required placeholder="Enter your admin API key">
+                </div>
+                <button type="submit" class="form-submit">Access Dashboard</button>
+                <div class="form-message" id="loginMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-dashboard" id="adminDashboard" style="display: none;">
+        <nav class="admin-nav">
+            <div class="nav-left">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="28" height="28" rx="6" stroke="#00f0ff" stroke-width="2"/>
+                    <path d="M10 16L14 20L22 12" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Admin Panel</span>
+            </div>
+            <div class="nav-right">
+                <a href="index.html" class="nav-link">View Site</a>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </nav>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <div>
+                    <h1>Submissions</h1>
+                    <p>Manage contact form submissions</p>
+                </div>
+                <button class="refresh-btn" id="refreshBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6"/>
+                        <path d="M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalCount">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon status-new">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="newCount">0</div>
+                        <div class="stat-label">New</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon status-read">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="readCount">0</div>
+                        <div class="stat-label">Read</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon status-replied">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="repliedCount">0</div>
+                        <div class="stat-label">Replied</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="new">New</button>
+                <button class="filter-btn" data-filter="read">Read</button>
+                <button class="filter-btn" data-filter="replied">Replied</button>
+                <button class="filter-btn" data-filter="archived">Archived</button>
+            </div>
+
+            <div class="submissions-list" id="submissionsList">
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p>No submissions yet</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Submission Detail Modal -->
+    <div class="modal" id="submissionModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submission Details</h2>
+                <button class="modal-close" id="modalClose">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <div class="status-actions">
+                    <button class="status-btn" data-status="new">New</button>
+                    <button class="status-btn" data-status="read">Read</button>
+                    <button class="status-btn" data-status="replied">Replied</button>
+                    <button class="status-btn" data-status="archived">Archived</button>
+                </div>
+                <button class="delete-btn" id="deleteBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/admin.js"></script>
+</body>
+</html>

@@ -17,7 +17,10 @@ if (cursor && cursorDot) {
     });
 
     // Add hover effects to interactive elements
-    const interactiveElements = document.querySelectorAll('a, button, .btn, .skill-card, .project-card, .form-input, .form-textarea, .form-submit');
+    const interactiveElements = document.querySelectorAll(
+        'a, button, .btn, .skill-card, .project-card, .form-input, .form-textarea, .form-submit, ' +
+        '.filter-btn, .status-btn, .logout-btn, .refresh-btn, .delete-btn, .modal-close, .nav-link, .submission-card'
+    );
     interactiveElements.forEach(el => {
         el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
         el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
